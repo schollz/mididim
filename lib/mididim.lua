@@ -26,9 +26,7 @@ end
 
 function Mididim:start()
   self.is_playing=true
-  for i,v in ipairs(self.memory) do
-    self.memory[i].played=false
-  end
+  self.beat=1000
 end
 
 function Mididim:stop()
@@ -38,6 +36,7 @@ end
 function Mididim:rec_start()
   self.memory={}
   self.is_recording=true
+  self.is_playing=false
 end
 
 function Mididim:rec_stop()
@@ -62,9 +61,20 @@ function Mididim:msg(d)
   end
 end
 
-function Mididim:play(m,beat)
+function Mididim:play(m,global_beat)
+  if not self.is_playing then
+    do return end
+  end
+  local beat=global_beat%self.loop_size+1 -- (beats in range [1,loop_size])
+  if beat<self.last_beat then
+    -- new loop, reset everything
+    for i,v in ipairs(self.memory) do
+      self.memory[i].played=false
+    end
+  end
+  self.last_beat=beat
   for i,v in ipairs(self.memory) do
-    if not v.played and math.abs(v.beat-beat)<=self.quantize then
+    if (not v.played) and math.abs(v.beat-beat)<=self.quantize then
       self.memory[i].played=true
       if v.type=="note_on" then
         m:note_on(v.note,v.velocity,v.ch)
