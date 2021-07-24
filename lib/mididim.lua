@@ -2,7 +2,7 @@ local Mididim={}
 
 function Mididim:debug(s)
   if mode_debug==true then
-    print("mididim: "..s)
+    print("mididim ["..self.name.."]: "..s)
   end
 end
 
@@ -24,6 +24,7 @@ function Mididim:reset()
   end
   self.memory={}
   self:reset_note_ons()
+  self.loop_size=16
 end
 
 function Mididim:reset_note_ons()
@@ -34,13 +35,29 @@ function Mididim:reset_note_ons()
   self.on={}
 end
 
-function Mididim:start()
+function Mididim:play_start()
   self.is_playing=true
   self.beat=1000
 end
 
-function Mididim:stop()
+function Mididim:play_stop()
   self.is_playing=false
+end
+
+function Mididim:play_toggle()
+  if self.is_playing then
+    self:play_start()
+  else
+    self:play_stop()
+  end
+end
+
+function Mididim:rec_toggle()
+  if self.is_recording then
+    self:rec_stop()
+  else
+    self:rec_start()
+  end
 end
 
 function Mididim:rec_start()
@@ -65,11 +82,16 @@ function Mididim:loop(loop_size)
   self.loop_size=loop_size
 end
 
+function Mididim:loop_change(delta)
+  self.loop_size=self.loop_size+delta
+end
+
 function Mididim:msg(d)
   if self.is_recording then
     if d.type=="note_on" or d.type=="note_off"
       or d.type=="pitchbend" or d.type=="key_pressure"
       or d.type=="channel_pressure" then
+      self:debug("recording "..d.type)
       table.insert(self.memory,d)
     end
   end
