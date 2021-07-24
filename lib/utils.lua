@@ -11,3 +11,7 @@ function math.sign(number)
     return 0
   end
 end
+
+function table.copy(t)
+  return json.decode(json.encode(t))
+end

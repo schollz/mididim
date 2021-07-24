@@ -78,6 +78,7 @@ function Mididim:rec_stop()
     end
     self.memory[i].beat=v.beat-firstbeat+1
   end
+  self.memory_lt=table.copy(self.memory)
 end
 
 function Mididim:loop(loop_size)
@@ -99,7 +100,22 @@ function Mididim:msg(d)
   end
 end
 
-function Mididim:mutate_note_on(i)
+-- unique_notes returns a table of the unique notes in long-term memory
+function Mididim:unique_notes()
+  local have={}
+  local notes={}
+  for i,v in ipairs(self.memory_lt) do
+    if v.type=="note_on" then
+      if have[v.note]==nil then
+        table.insert(notes,v.note)
+        have[v.note]=true
+      end
+    end
+  end
+end
+
+-- mutate_note will transform a note at position i in memory to new_note
+function Mididim:mutate_note(i,new_note)
   if self.memory[i]==nil then
     do return end
   end
@@ -107,9 +123,11 @@ function Mididim:mutate_note_on(i)
     do return end
   end
   local n=self.memory[i].note
+  self.memory[i].note=new_note
+  -- go through and replace the note_off with the new note
   for j,v in ipairs(self.memory) do
     if j>i and v.type=="note_off" and v.note==n then
-      self.memory[j].note=n
+      self.memory[j].note=new_note
     end
   end
 end
