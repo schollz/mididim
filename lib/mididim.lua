@@ -20,12 +20,15 @@ function Mididim:reset()
   self.is_recording=false
   self.is_playing=false
   if self.quantize==nil then
-    self.quantize=0
+    self.quantize=1/16
   end
+  self.on={}
   self.memory={}
   self.memory_lt={}
   self:reset_note_ons()
-  self.loop_size=16
+  self.loop_size=4
+  self.last_beat=10000
+  self.last_global_beat=0
 end
 
 function Mididim:reset_note_ons()
@@ -37,16 +40,22 @@ function Mididim:reset_note_ons()
 end
 
 function Mididim:play_start()
+  self:debug("start playing")
   self.is_playing=true
   self.beat=1000
 end
 
 function Mididim:play_stop()
+  self:debug("stop playing")
   self.is_playing=false
+  self:reset_note_ons()
 end
 
 function Mididim:play_toggle()
-  if self.is_playing then
+  if is_recording then
+    self:rec_stop()
+  end
+  if not self.is_playing then
     self:play_start()
   else
     self:play_stop()
@@ -54,6 +63,9 @@ function Mididim:play_toggle()
 end
 
 function Mididim:rec_toggle()
+  if is_playing then
+    self:play_stop()
+  end
   if self.is_recording then
     self:rec_stop()
   else
@@ -94,11 +106,14 @@ function Mididim:msg(d)
     if d.type=="note_on" or d.type=="note_off"
       or d.type=="pitchbend" or d.type=="key_pressure"
       or d.type=="channel_pressure" then
-      self:debug("recording "..d.type)
+      d.beat=clock.get_beats()
+      self:debug("recording "..d.type.." on beat "..d.beat)
       table.insert(self.memory,d)
     end
   end
 end
+-- tab.print(mididims['OP-1 Midi Device'])
+-- tab.print(mididims['OP-1 Midi Device'].memory)
 
 -- unique_notes returns a table of the unique notes in long-term memory
 function Mididim:unique_notes()
@@ -147,14 +162,15 @@ function Mididim:emit(global_beat)
   end
   self.last_beat=beat
   for i,v in ipairs(self.memory) do
-    if (not v.played) and math.abs(v.beat-beat)<=self.quantize then
+    if (not v.played) and beat-v.beat>-1/128 then
+      self:debug(v.type.." "..v.note.." on beat "..beat)
       self.memory[i].played=true
       if v.type=="note_on" then
         self.m:note_on(v.note,v.velocity,v.ch)
-        self.on[v.note]={note=v.note,velocity=v.velocity,ch=v.ch}
+        self.on[v.note]={note=v.note,velocity=v.velocity,ch=v.ch,beat=beat}
       elseif v.type=="note_off" then
         self.m:note_off(v.note,v.velocity,v.ch)
-        self.off[v.note]=nil
+        self.on[v.note]=nil
       elseif v.type=="pitchbend" then
         self.m:pitchbend(v.val,v.ch)
       elseif v.type=="key_pressure" then
