@@ -60,6 +60,13 @@ end
 function enc(k,d)
   if k==3 then
     mididims[dev_list[dev_current]]:loop_change(math.sign(d))
+  elseif k==2 then
+    dev_current=dev_current+math.sign(d)
+    if dev_current>#dev_list then
+      dev_current=1
+    elseif dev_current<1 then
+      dev_current=#dev_list
+    end
   end
 end
 
