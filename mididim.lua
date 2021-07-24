@@ -14,7 +14,6 @@ musicutil=require "musicutil"
 lattice=require "lattice"
 mididim=include("lib/mididim")
 
-dev_current=1
 dev_list={}
 
 function init()
@@ -31,6 +30,13 @@ function init()
       mididims[dev.name]:msg(d)
     end
   end
+
+  -- setup parameters
+  params:add{type="option",id="selected",name="selected",
+    options=dev_list,
+    action=function(v)
+    end
+  }
 
   latticeclock=lattice:new()
   local division=1/16
@@ -51,22 +57,17 @@ end
 
 function key(k,z)
   if k==2 and z==1 then
-    mididims[dev_list[dev_current]]:play_toggle()
+    mididims[dev_list[params:get("selected")]]:play_toggle()
   elseif k==3 and z==2 then
-    mididims[dev_list[dev_current]]:rec_toggle()
+    mididims[dev_list[params:get("selected")]]:rec_toggle()
   end
 end
 
 function enc(k,d)
   if k==3 then
-    mididims[dev_list[dev_current]]:loop_change(math.sign(d))
+    mididims[dev_list[params:get("selected")]]:loop_change(math.sign(d))
   elseif k==2 then
-    dev_current=dev_current+math.sign(d)
-    if dev_current>#dev_list then
-      dev_current=1
-    elseif dev_current<1 then
-      dev_current=#dev_list
-    end
+    params:delta("selected",math.sign(d))
   end
 end
 
@@ -75,7 +76,7 @@ function redraw()
   screen.font_size(8)
   for i,v in ipairs(dev_list) do
     screen.level(7)
-    if i==dev_current then
+    if i==params:get("selected") then
       screen.level(15)
     end
     screen.move(16,20+(i-1))
