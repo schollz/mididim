@@ -53,7 +53,7 @@ function init()
     action=function(t)
       local beat=t/latticeclock.ppqn -- get beat by dividing by parts-per-quarternote
       for k,v in pairs(mididims) do
-        v:play(beat)
+        v:emit(beat)
       end
     end
   }

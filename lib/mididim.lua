@@ -132,7 +132,7 @@ function Mididim:mutate_note(i,new_note)
   end
 end
 
-function Mididim:play(global_beat)
+function Mididim:emit(global_beat)
   if not self.is_playing then
     do return end
   end
