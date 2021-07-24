@@ -23,6 +23,7 @@ function Mididim:reset()
     self.quantize=0
   end
   self.memory={}
+  self.memory_lt={}
   self:reset_note_ons()
   self.loop_size=16
 end
@@ -62,6 +63,7 @@ end
 
 function Mididim:rec_start()
   self.memory={}
+  self.memory_lt={}
   self.is_recording=true
   self.is_playing=false
 end
@@ -93,6 +95,21 @@ function Mididim:msg(d)
       or d.type=="channel_pressure" then
       self:debug("recording "..d.type)
       table.insert(self.memory,d)
+    end
+  end
+end
+
+function Mididim:mutate_note_on(i)
+  if self.memory[i]==nil then
+    do return end
+  end
+  if self.memory[i].type~="note_on" then
+    do return end
+  end
+  local n=self.memory[i].note
+  for j,v in ipairs(self.memory) do
+    if j>i and v.type=="note_off" and v.note==n then
+      self.memory[j].note=n
     end
   end
 end

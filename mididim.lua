@@ -9,6 +9,14 @@
 
 mode_debug=true
 
+--json
+print(_VERSION)
+print(package.cpath)
+if not string.find(package.cpath,"/home/we/dust/code/mididim/lib/") then
+  package.cpath=package.cpath..";/home/we/dust/code/mididim/lib/?.so"
+end
+json=require("cjson")
+
 include("lib/utils")
 musicutil=require "musicutil"
 lattice=require "lattice"
