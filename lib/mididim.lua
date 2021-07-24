@@ -79,7 +79,7 @@ function Mididim:play(global_beat)
   if not self.is_playing then
     do return end
   end
-  local beat=global_beat%self.loop_size+1 -- (beats in range [1,loop_size])
+  local beat=(global_beat-1)%self.loop_size+1 -- (beats in range [1,loop_size])
   if beat<self.last_beat then
     -- new loop, reset everything
     for i,v in ipairs(self.memory) do
